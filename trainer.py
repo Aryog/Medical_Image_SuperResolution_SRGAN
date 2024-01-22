@@ -16,6 +16,7 @@ from torch.autograd import Variable
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
+# Your path where is your dataset of the size 
 path = r"/home/yogesharyal/Downloads/Sample_MRI_data/output/"
 path_list = os.listdir(path)
 
@@ -43,8 +44,12 @@ optimizer_G = optim.Adam(gen.parameters(), lr=1e-3, weight_decay=1e-5)
 optimizer_D = optim.Adam(disc.parameters(), lr=1e-4, weight_decay=1e-5)
 loss_function = torch.nn.L1Loss().to(device)
 gan_loss = torch.nn.BCEWithLogitsLoss().to(device)
-scaler = torch.cuda.amp.GradScaler()
-print("All optimizer initialized")
+if torch.cuda.is_available():
+    scaler = torch.cuda.amp.GradScaler()
+    print("Gradient scaler initialized with GPU support")
+else:
+    scaler = None
+    print("Gradient scaler initialized without GPU support")
 
 def fit(
     gen,
@@ -65,7 +70,7 @@ def fit(
         e_loss_G, e_loss_D = [], []
 
         for data in train_dl:
-            hr_img, lr_img = data
+            lr_img, hr_img = data
 
             valid = Variable(Tensor(np.ones((1, 2))), requires_grad=False)
             fake = Variable(Tensor(np.zeros((1, 2))), requires_grad=False)
@@ -75,8 +80,7 @@ def fit(
                 # Train Generator
 
                 pred_hr = gen(lr_img)
-
-                content_loss = loss_function(pred_hr, hr_img)
+                content_loss = torch.nn.functional.l1_loss(pred_hr, hr_img)
 
                 pred_features = feature_extractor(pred_hr)
                 hr_features = feature_extractor(hr_img)
@@ -84,8 +88,9 @@ def fit(
                 feature_loss = 0.0
 
                 for pred_feature, hr_feature in zip(pred_features, hr_features):
-                    feature_loss += loss_function(pred_feature, hr_feature)
-
+                    feature_loss += torch.nn.functional.l1_loss(pred_feature, hr_feature)
+                print(f'hr image {hr_img.detach().shape}')
+                print(f'lr image{lr_img.shape}')
                 pred_real = disc(hr_img.detach(), lr_img)
                 pred_fake = disc(pred_hr, lr_img)
 
@@ -95,10 +100,19 @@ def fit(
 
                 loss_G = content_loss * 0.1 + feature_loss * 0.1 + gan_loss_num
 
+                # optimizer_G.zero_grad()
+                # scaler.scale(loss_G).backward()
+                # scaler.step(optimizer_G)
+                # scaler.update()
+                # e_loss_G.append(loss_G)
                 optimizer_G.zero_grad()
-                scaler.scale(loss_G).backward()
-                scaler.step(optimizer_G)
-                scaler.update()
+                if torch.cuda.is_available() and scaler is not None:
+                    scaler.scale(loss_G).backward()
+                    scaler.step(optimizer_G)
+                    scaler.update()
+                else:
+                    loss_G.backward()
+                    optimizer_G.step()
                 e_loss_G.append(loss_G)
 
                 # Train Discriminator
@@ -116,10 +130,19 @@ def fit(
                     (loss_real_num + loss_fake_num) / 2
                 )
 
+                # optimizer_D.zero_grad()
+                # scaler.scale(loss_D).backward()
+                # scaler.step(optimizer_D)
+                # scaler.update()
+                # e_loss_D.append(loss_D)
                 optimizer_D.zero_grad()
-                scaler.scale(loss_D).backward()
-                scaler.step(optimizer_D)
-                scaler.update()
+                if torch.cuda.is_available() and scaler is not None:
+                    scaler.scale(loss_D).backward()
+                    scaler.step(optimizer_D)
+                    scaler.update()
+                else:
+                    loss_D.backward()
+                    optimizer_D.step()
                 e_loss_D.append(loss_D)
 
         t_loss_D.append(sum(e_loss_D) / len(e_loss_D))
@@ -134,3 +157,29 @@ def fit(
 
     return t_loss_G, t_loss_D
  
+
+if __name__ == "__main__":
+    # Set the number of training epochs
+    epochs = 10
+
+    # Call the fit function to train the models
+    losses_G, losses_D = fit(
+        gen,
+        disc,
+        feature_extractor,
+        train_dl,
+        epochs,
+        optimizer_G,
+        optimizer_D,
+        scaler,
+        loss_function,
+        gan_loss,
+    )
+
+    # Optionally, plot the training losses
+    plt.plot(losses_G, label='Generator Loss')
+    plt.plot(losses_D, label='Discriminator Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.show()

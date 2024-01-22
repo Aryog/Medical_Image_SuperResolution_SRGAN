@@ -12,7 +12,7 @@ class GAN_Data(Dataset):
 
         self.path_list = path_list
         self.transforms = transforms
-        self.t = ttf.Resize((256, 256))
+        self.t = ttf.Resize((64, 64))
         self.blur = ttf.GaussianBlur(3, sigma=(0.1, 2.0))
     
     def __getitem__(self, idx):

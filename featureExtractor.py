@@ -25,9 +25,7 @@ class FeatureExtractorVGG19(nn.Module):
             x = layer(x)
             vgg_outputs.append(x)
 
-        vgg_output = dict(zip(self.vgg_layer, vgg_outputs))
-        return vgg_output
-
+        return vgg_outputs
 
 # Example usage:
 # Initialize the feature extractor
