@@ -3,19 +3,21 @@ import torch
 import torch.nn as nn
 import torchvision.transforms as ttf
 from PIL import Image
+from zipfile import ZipFile
 from generator import Generator
 from featureExtractor import FeatureExtractorVGG19
 
 # Function to load the trained generator model
-def load_generator_model(epoch_number):
+def load_generator_model(epoch_number, model_dir="./genModel/"):
+    # Load the generator model
     gen = Generator().to(device)
-    gen.load_state_dict(torch.load(f"./gen_{epoch_number}"))
+    gen.load_state_dict(torch.load(os.path.join(model_dir, f"gen_{epoch_number}")))
     gen.eval()
     return gen
 
 # Function to preprocess the input image
-def preprocess_image(image_path):
-    image = Image.open(image_path).convert('RGB')
+def preprocess_image(input_image_path):
+    image = Image.open(input_image_path).convert('RGB')
     
     # Apply the same transformations as during training
     transforms = ttf.Compose([
@@ -39,11 +41,11 @@ if __name__ == "__main__":
     device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Get the path of the input image
-    input_image_path = input("./")
+    input_image_path = input("Enter the path of the input image: ")
 
     # Load the trained generator model (change 'epoch_number' to the desired epoch)
     epoch_number = 10  # Change this to the epoch you want to load
-    generator = load_generator_model(epoch_number)
+    generator = load_generator_model(epoch_number-1)
 
     # Preprocess the input image
     input_image = preprocess_image(input_image_path)

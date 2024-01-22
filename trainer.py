@@ -42,7 +42,7 @@ train_dl = DataLoader(dataset, 1, True)
 
 optimizer_G = optim.Adam(gen.parameters(), lr=1e-3, weight_decay=1e-5)
 optimizer_D = optim.Adam(disc.parameters(), lr=1e-4, weight_decay=1e-5)
-loss_function = torch.nn.L1Loss().to(device)
+# loss_function = torch.nn.L1Loss().to(device)
 gan_loss = torch.nn.BCEWithLogitsLoss().to(device)
 if torch.cuda.is_available():
     scaler = torch.cuda.amp.GradScaler()
@@ -60,7 +60,6 @@ def fit(
     optimizer_G,
     optimizer_D,
     scaler,
-    loss_function,
     gan_loss,
 ):
 
@@ -152,8 +151,8 @@ def fit(
             f"{epoch+1}/{epochs} -- Gen Loss: {sum(t_loss_G) / len(t_loss_G)} -- Disc Loss: {sum(t_loss_D) / len(t_loss_D)}"
         )
 
-        torch.save(gen, "./gen_{epoch}")
-        torch.save(disc, "./disc_{epoch}")
+        torch.save(gen.state_dict(), f"./genModel/gen_{epoch}")
+        torch.save(disc.state_dict(), f"./discModel/disc_{epoch}")
 
     return t_loss_G, t_loss_D
  
@@ -172,7 +171,6 @@ if __name__ == "__main__":
         optimizer_G,
         optimizer_D,
         scaler,
-        loss_function,
         gan_loss,
     )
 
