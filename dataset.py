@@ -12,14 +12,14 @@ class GAN_Data(Dataset):
 
         self.path_list = path_list
         self.transforms = transforms
-        self.t = ttf.Resize((64, 64))
+        self.t = ttf.Resize((128, 128))
         self.blur = ttf.GaussianBlur(3, sigma=(0.1, 2.0))
     
     def __getitem__(self, idx):
 
         img_path = self.path_list[idx]
 
-        img = np.array(Image.open(r"/home/yogesharyal/Downloads/Sample_MRI_data/output/" + img_path).convert('RGB').resize((256, 256)))
+        img = np.array(Image.open(r"D:/minor/rwmab/Medical_Image_SuperResolution_SRGAN/dataset/" + img_path).convert('RGB').resize((512, 512)))
         img = torch.tensor(img, dtype= torch.float).permute(2, 0, 1)
 
         if self.transforms:
