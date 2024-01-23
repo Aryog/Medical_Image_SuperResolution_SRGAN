@@ -17,7 +17,7 @@ from torch.autograd import Variable
 device = "cuda" if torch.cuda.is_available() else "cpu"
 Tensor = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.Tensor
 # Your path where is your dataset of the size 
-path = r"/home/yogesharyal/Downloads/Sample_MRI_data/output/"
+path = r"D:/minor/rwmab/Medical_Image_SuperResolution_SRGAN/dataset/"
 path_list = os.listdir(path)
 
 
