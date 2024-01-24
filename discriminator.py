@@ -19,7 +19,7 @@ class D_Block(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self, img_size = [64,64], in_channels=3):
+    def __init__(self, img_size=[64,64], in_channels=3):
         super().__init__()
         # Layers for generator image size
         self.conv_1_1 = nn.Sequential(
@@ -56,7 +56,8 @@ class Discriminator(nn.Module):
 
         self.flatten = nn.Flatten()
 
-        self.fc1 = nn.Sequential(nn.Linear(1024 * img_size[0] * img_size[1] // 256, 100), nn.LeakyReLU() )# Change based on input image size
+        #self.fc1 = nn.Sequential(nn.Linear(1024 * img_size[0] * img_size[1] // 256, 100), nn.LeakyReLU() )# Change based on input image size
+        self.fc1 = nn.Sequential(nn.Linear(4096, 100), nn.LeakyReLU())
         self.fc2 = nn.Linear(100, 2)
 
         self.relu = nn.LeakyReLU(negative_slope=0.2)
@@ -65,7 +66,7 @@ class Discriminator(nn.Module):
     def forward(self, x1, x2):
         '''
         x1 is the array for generator image
-        x2 is the array for discriminator image
+        x2 is the array for lr image
         '''
         x_1 = self.block_1_3(self.block_1_2(self.block_1_1(self.conv_1_1(x1))))
         x_2 = self.block_2_2(self.conv_2_1(x2))
@@ -82,4 +83,5 @@ class Discriminator(nn.Module):
         x = self.fc1(x)
         x = self.fc2(self.relu(x))
         # outputs the range of 0 to 1
+        print(x.shape)
         return self.sigmoid(x)

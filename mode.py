@@ -46,6 +46,8 @@ def train(args):
         for i, tr_data in enumerate(loader):
             gt = tr_data['GT'].to(device)
             lr = tr_data['LR'].to(device)
+            print(lr.shape)
+            print(gt.shape)
 
             # output, _ = generator(lr)
             output = generator(lr)
@@ -97,6 +99,8 @@ def train(args):
             # output, _ = generator(lr)
             output = generator(lr)
             # fake_prob = discriminator(output)
+            print(output.shape)
+            print(lr.shape)
             fake_prob = discriminator(output,lr)
             # real_prob = discriminator(gt)
             real_prob = discriminator(gt,lr)
