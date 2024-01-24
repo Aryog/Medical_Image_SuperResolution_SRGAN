@@ -79,39 +79,3 @@ class Generator(nn.Module):
         x = self.conv3(x)
 
         return x
-
-
-
-# if __name__ == "__main__":
-#     # Step 1: Create an instance of the Generator
-#     generator = Generator(in_channels=3, blocks=8)
-
-#     # Step 2: Prepare the dataset
-#     path_list = [...]  # List of paths to your images
-#     dataset = GAN_Data(path_list, transforms=transforms.ToTensor())  # Assuming ToTensor() is sufficient
-
-#     # Step 3: Create a DataLoader for training
-#     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)
-
-#     # Step 4: Define loss function and optimizer
-#     criterion = torch.nn.MSELoss()
-#     optimizer = torch.optim.Adam(generator.parameters(), lr=0.001)
-
-#     # Step 5: Training loop
-#     epochs = 10
-
-#     for epoch in range(epochs):
-#         for batch in dataloader:
-#             lr_img, hr_img = batch
-#             fake_img = generator(lr_img)
-
-#             loss = criterion(fake_img, hr_img)
-
-#             optimizer.zero_grad()
-#             loss.backward()
-#             optimizer.step()
-
-#         print(f'Epoch {epoch + 1}/{epochs}, Loss: {loss.item()}')
-
-#     # Optional: Save the trained model
-#     torch.save(generator.state_dict(), 'generator_model.pth')

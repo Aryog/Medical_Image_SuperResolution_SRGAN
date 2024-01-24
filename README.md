@@ -41,3 +41,7 @@ To use the app, follow these steps:
     ```
     
     Make sure to input the path of the test image when prompted.
+
+```
+python main.py --LR_path custom_dataset/train_LR --GT_path custom_dataset/train_HR
+```

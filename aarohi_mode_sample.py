@@ -5,12 +5,14 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from losses import TVLoss, perceptual_loss
 from dataset import *
-from srgan_model import Generator, Discriminator
+# from srgan_model import Generator, Discriminator
+from generator import Generator
+from discriminator import Discriminator
 from vgg19 import vgg19
 import numpy as np
 from PIL import Image
 from skimage.color import rgb2ycbcr
-from skimage.measure import compare_psnr
+# from skimage.measure import compare_psnr
 
 
 def train(args):
@@ -21,7 +23,8 @@ def train(args):
     dataset = mydata(GT_path = args.GT_path, LR_path = args.LR_path, in_memory = args.in_memory, transform = transform)
     loader = DataLoader(dataset, batch_size = args.batch_size, shuffle = True, num_workers = args.num_workers)
     
-    generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = args.res_num, scale=args.scale)
+    # generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = args.res_num, scale=args.scale)
+    generator = Generator()
     
     
     if args.fine_tuning:        
@@ -44,7 +47,8 @@ def train(args):
             gt = tr_data['GT'].to(device)
             lr = tr_data['LR'].to(device)
 
-            output, _ = generator(lr)
+            # output, _ = generator(lr)
+            output = generator(lr)
             loss = l2_loss(gt, output)
 
             g_optim.zero_grad()
@@ -58,7 +62,8 @@ def train(args):
             print(loss.item())
             print('=========')
         
-        if pre_epoch % 800 ==0:
+        # if pre_epoch % 800 ==0:
+        if pre_epoch % 2 ==0:
             torch.save(generator.state_dict(), './model/pre_trained_model_%03d.pt'%pre_epoch)
 
         
@@ -66,7 +71,8 @@ def train(args):
     vgg_net = vgg19().to(device)
     vgg_net = vgg_net.eval()
     
-    discriminator = Discriminator(patch_size = args.patch_size * args.scale)
+    # discriminator = Discriminator(patch_size = args.patch_size * args.scale)
+    discriminator = Discriminator()
     discriminator = discriminator.to(device)
     discriminator.train()
     
@@ -88,9 +94,12 @@ def train(args):
             lr = tr_data['LR'].to(device)
                         
             ## Training Discriminator
-            output, _ = generator(lr)
-            fake_prob = discriminator(output)
-            real_prob = discriminator(gt)
+            # output, _ = generator(lr)
+            output = generator(lr)
+            # fake_prob = discriminator(output)
+            fake_prob = discriminator(output,lr)
+            # real_prob = discriminator(gt)
+            real_prob = discriminator(gt,lr)
             
             d_loss_real = cross_ent(real_prob, real_label)
             d_loss_fake = cross_ent(fake_prob, fake_label)
@@ -103,8 +112,10 @@ def train(args):
             d_optim.step()
             
             ## Training Generator
-            output, _ = generator(lr)
-            fake_prob = discriminator(output)
+            # output, _ = generator(lr)
+            output = generator(lr)
+            # fake_prob = discriminator(output)
+            fake_prob = discriminator(output,lr)
             
             _percep_loss, hr_feat, sr_feat = VGG_loss((gt + 1.0) / 2.0, (output + 1.0) / 2.0, layer = args.feat_layer)
             
@@ -129,11 +140,12 @@ def train(args):
             print(d_loss.item())
             print('=========')
 
-        if fine_epoch % 500 ==0:
-            #torch.save(generator.state_dict(), './model/SRGAN_gene_%03d.pt'%fine_epoch)
-            #torch.save(discriminator.state_dict(), './model/SRGAN_discrim_%03d.pt'%fine_epoch)
-            torch.save(generator.state_dict(), './model/SRGAN_gene_%03d.pt'%fine_epoch)
-            torch.save(discriminator.state_dict(), './model/SRGAN_discrim_%03d.pt'%fine_epoch)
+        # if fine_epoch % 500 ==0:
+        if fine_epoch % 2 ==0:
+            torch.save(generator.state_dict(), './model/MedSRGAN_gene_%03d.pt'%fine_epoch)
+            torch.save(discriminator.state_dict(), './model/MedSRGAN_discrim_%03d.pt'%fine_epoch)
+            # torch.save(generator.state_dict(), './model/SRGAN_gene_%03d.pt'%fine_epoch)
+            # torch.save(discriminator.state_dict(), './model/SRGAN_discrim_%03d.pt'%fine_epoch)
 
 
 # In[ ]:
@@ -191,7 +203,8 @@ def test_only(args):
     dataset = testOnly_data(LR_path = args.LR_path, in_memory = False, transform = None)
     loader = DataLoader(dataset, batch_size = 1, shuffle = False, num_workers = args.num_workers)
     
-    generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = args.res_num)
+    # generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = args.res_num)
+    generator = Generator()
     generator.load_state_dict(torch.load(args.generator_path))
     generator = generator.to(device)
     generator.eval()
@@ -199,7 +212,7 @@ def test_only(args):
     with torch.no_grad():
         for i, te_data in enumerate(loader):
             lr = te_data['LR'].to(device)
-            output, _ = generator(lr)
+            output = generator(lr)
             output = output[0].cpu().numpy()
             output = (output + 1.0) / 2.0
             output = output.transpose(1,2,0)

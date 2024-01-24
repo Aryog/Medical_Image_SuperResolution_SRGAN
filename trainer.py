@@ -1,7 +1,7 @@
 # from medsrgan import Generator, Discriminator, FeatureExtractor
 from generator import Generator
 from discriminator import Discriminator
-from dataset import GAN_Data
+from adataset import GAN_Data
 from featureExtractor import FeatureExtractorVGG19
 from tqdm import tqdm
 import os
@@ -151,8 +151,8 @@ def fit(
             f"{epoch+1}/{epochs} -- Gen Loss: {sum(t_loss_G) / len(t_loss_G)} -- Disc Loss: {sum(t_loss_D) / len(t_loss_D)}"
         )
 
-        torch.save(gen.state_dict(), f"./genModel/gen_{epoch}")
-        torch.save(disc.state_dict(), f"./discModel/disc_{epoch}")
+        torch.save(gen.state_dict(), f"./genModel/gen_{epoch}.pt")
+        torch.save(disc.state_dict(), f"./discModel/disc_{epoch}.pt")
 
     return t_loss_G, t_loss_D
  
