@@ -1,76 +1,43 @@
-import os
 import torch
-import torchvision.transforms as ttf
 from PIL import Image
-from generator import Generator
-from featureExtractor import FeatureExtractorVGG19
 import numpy as np
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+from generator import Generator  # Update with correct import
+# from srgan_model import Generator
+def preprocess_input(image_path):
+    # Load the input image
+    input_image = Image.open(image_path).convert("RGB")
+    input_image = np.array(input_image) / 127.5 - 1.0
+    input_image = input_image.transpose(2, 0, 1).astype(np.float32)
+    return torch.tensor(input_image).unsqueeze(0)
 
-# Function to load the trained generator model
-def load_generator_model(epoch_number, model_dir="./genModel/"):
+def test_single_image(generator_path, input_image_path, output_path):
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # Load the generator model
-    gen = Generator(n_channels=3, blocks=8)
-    gen.load_state_dict(torch.load(os.path.join(model_dir, f"gen_{epoch_number}")))
-    gen = gen.to(device)
-    gen.eval()
-    return gen
-
-# Function to preprocess the input image
-def preprocess_image(input_image_path, transforms):
-    image = Image.open(input_image_path).convert('RGB')
-    
-    # Apply the same transformations as during training
-    image = transforms(image)
-    print("preprocess_image")
-    print(image)
-    
-    # Normalize the image to be in the range [-1, 1] (matching GAN_Data normalization)
-    image = (image / 127.5) - 1.0
-    
-    return image.unsqueeze(0).to(device)
-
-# Function to generate the enhanced output
-def generate_enhanced_output(gen, input_image):
-    with torch.no_grad():
-        enhanced_image = gen(input_image)
-    return enhanced_image.squeeze(0).cpu()
-
-if __name__ == "__main__":
-    # Set the device (cuda or cpu)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-
-    # Get the path of the input image
-    input_image_path = input("Enter the path of the input image: ")
-
-    # Load the trained generator model (change 'epoch_number' to the desired epoch)
-    epoch_number = 10  # Change this to the epoch you want to load
-    generator = load_generator_model(epoch_number-1)
-
-    # Define the transformations for preprocessing (matching GAN_Data)
-    transforms = ttf.Compose([
-        ttf.Resize((256, 256)),
-        ttf.GaussianBlur(3, sigma=(0.1, 2.0)),
-        ttf.ToTensor()
-    ])
+    generator = Generator()
+    # generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = 16)
+    generator.load_state_dict(torch.load(generator_path))
+    generator = generator.to(device)
+    generator.eval()
 
     # Preprocess the input image
-    input_image = preprocess_image(input_image_path, transforms)
-    # Print input image tensor
-    print("Input Image Tensor:")
-    print(input_image)
+    input_image = preprocess_input(input_image_path).to(device)
 
-    # Generate the enhanced output
-    enhanced_output = generate_enhanced_output(generator, input_image)
+    # Perform inference
+    with torch.no_grad():
+        output = generator(input_image)
+        output = output[0].cpu().numpy()
+        output = (output + 1.0) / 2.0
+        output = output.transpose(1, 2, 0)
+        result = Image.fromarray((output * 255.0).astype(np.uint8))
+        result.save(output_path)
 
-    # Normalize the enhanced output tensor to be in the range [0, 1]
-    enhanced_output = torch.clamp(enhanced_output, 0, 1)
+if __name__ == "__main__":
+    # Specify the paths and parameters
+    generator_path = "./model/pre_trained_model_010.pt"
+    input_image_path = "./check.jpeg"
+    output_path = "./enhanced_output.jpeg"
 
-    # Convert the enhanced output to a NumPy array for visualization
-    enhanced_output_np = enhanced_output.mul(255).byte().numpy()
-
-    # Save the enhanced output as an image
-    output_image_path = "./enhanced_output.png"
-    enhanced_output_pil = Image.fromarray(enhanced_output_np.transpose(1, 2, 0).astype(np.uint8))
-    enhanced_output_pil.save(output_image_path)
+    # Test the model with a single image
+    test_single_image(generator_path, input_image_path, output_path)

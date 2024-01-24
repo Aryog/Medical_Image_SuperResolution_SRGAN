@@ -24,15 +24,15 @@ discriminator = Discriminator(
 
 To use the app, follow these steps:
 
-1. Create the **`genModel`** and **`discModel`** folders in your project directory.
-2. Update the path in the **`trainer.py`** file with our custom data and also in **`dataset.py`** to output augmented
+1. Create the **`custom_dataset`** folder in your project directory.
+2. Create the **`train_LR`**  and  **`train_HR`** subdirectories inside **`custom_dataset`**
 3. Run the following command in the terminal to train the model:
     
     ```bash
-    python trainer.py
+    python main.py --LR_path custom_dataset/train_LR --GT_path custom_dataset/train_HR
     ```
     
-    This will train the MedSRGAN model using your medical image dataset. Adjust the hyperparameters in the **`trainer.py`** file as needed.
+    This will train the MedSRGAN model using your medical image dataset. Adjust the hyperparameters in the **`main.py`** file as needed.
     
 4. After training, you can test the model on new images using:
     
@@ -41,7 +41,4 @@ To use the app, follow these steps:
     ```
     
     Make sure to input the path of the test image when prompted.
-
-```
-python main.py --LR_path custom_dataset/train_LR --GT_path custom_dataset/train_HR
-```
+5. View the output result as **`enhanced_output.jpeg`** in your **root** directory.

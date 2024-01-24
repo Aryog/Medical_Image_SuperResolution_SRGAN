@@ -1,4 +1,4 @@
-from aarohi_mode_sample import *
+from mode import *
 import argparse
 
 
