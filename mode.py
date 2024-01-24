@@ -12,11 +12,11 @@ from vgg19 import vgg19
 import numpy as np
 from PIL import Image
 from skimage.color import rgb2ycbcr
-# from skimage.measure import compare_psnr
+#from skimage.measure import compare_psnr
 
 
 def train(args):
-    
+    print("args : ", args)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     transform  = transforms.Compose([crop(args.scale, args.patch_size), augmentation()])
@@ -126,7 +126,8 @@ def train(args):
             fake_prob = discriminator(output,lr)
             
             _percep_loss, hr_feat, sr_feat = VGG_loss((gt + 1.0) / 2.0, (output + 1.0) / 2.0, layer = args.feat_layer)
-            
+            #_percep_loss, hr_feat, sr_feat = VGG_loss(gt, output, layer=args.feat_layer)
+
             L2_loss = l2_loss(output, gt)
             percep_loss = args.vgg_rescale_coeff * _percep_loss
             adversarial_loss = args.adv_coeff * cross_ent(fake_prob, real_label)

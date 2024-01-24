@@ -32,9 +32,34 @@ class perceptual_loss(nn.Module):
         ## HR and SR should be normalized [0,1]
         hr = self.transform(HR)
         sr = self.transform(SR)
-        
-        hr_feat = getattr(self.vgg(hr), layer)
-        sr_feat = getattr(self.vgg(sr), layer)
+        vgg_outputs_hr=self.vgg(hr)
+        vgg_outputs_sr=self.vgg(sr)
+        vgg_layer=self.vgg.vgg_layer
+        hr_feat= vgg_outputs_hr[vgg_layer.index(layer)]
+        sr_feat= vgg_outputs_sr[vgg_layer.index(layer)]
+    
+        #hr_feat = getattr(self.vgg(hr), layer)
+        #sr_feat = getattr(self.vgg(sr), layer)
+        # Assuming vgg is a list and you want to use the first element
+     
+        #hr_feat = getattr(self.vgg, layer)(hr)
+        #sr_feat = getattr(self.vgg, layer)(sr)
+        # vgg_outputs=self.vgg(hr)[-1]
+        # hr_feat= vgg_outputs
+        # for sub_layer in layer.split('_'):
+        #     if sub_layer.isdigit():
+        #         hr_feat= hr_feat[int(sub_layer)]
+        #     else:
+        #         hr_feat= getattr(hr_feat, sub_layer)
+
+        # vgg_outputs_sr=self.vgg(sr)[-1]
+        # sr_feat= vgg_outputs_sr
+        # for sub_layer in layer.split('_'):
+        #     if sub_layer.isdigit():
+        #         sr_feat= sr_feat[int(sub_layer)]
+        #     else:
+        #         sr_feat= getattr(sr_feat, sub_layer)
+           
         
         return self.criterion(hr_feat, sr_feat), hr_feat, sr_feat
 

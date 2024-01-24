@@ -27,6 +27,7 @@ parser.add_argument("--generator_path", type = str)
 parser.add_argument("--mode", type = str, default = 'train')
 
 args = parser.parse_args()
+#args.feat_layer = 'relu5_4'
 
 if args.mode == 'train':
     train(args)
