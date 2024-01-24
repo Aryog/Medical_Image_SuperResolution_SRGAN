@@ -84,8 +84,11 @@ def train(args):
     VGG_loss = perceptual_loss(vgg_net)
     cross_ent = nn.BCELoss()
     tv_loss = TVLoss()
-    real_label = torch.ones((args.batch_size, 1)).to(device)
-    fake_label = torch.zeros((args.batch_size, 1)).to(device)
+    #real_label = torch.ones((args.batch_size, 1)).to(device)
+    #fake_label = torch.zeros((args.batch_size, 1)).to(device)
+    real_label = torch.ones((gt.size(0), 2)).to(device)
+    fake_label = torch.zeros((gt.size(0), 2)).to(device)
+
     
     while fine_epoch < args.fine_train_epoch:
         
@@ -104,7 +107,8 @@ def train(args):
             fake_prob = discriminator(output,lr)
             # real_prob = discriminator(gt)
             real_prob = discriminator(gt,lr)
-            
+            print("fake ", fake_prob)
+            print("real" , real_prob)
             d_loss_real = cross_ent(real_prob, real_label)
             d_loss_fake = cross_ent(fake_prob, fake_label)
             
