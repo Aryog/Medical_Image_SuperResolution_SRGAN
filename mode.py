@@ -12,11 +12,12 @@ from vgg19 import vgg19
 import numpy as np
 from PIL import Image
 from skimage.color import rgb2ycbcr
+from io import BytesIO
 #from skimage.measure import compare_psnr
 
 
 def train(args):
-    print("args : ", args)
+    #print("args : ", args)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     transform  = transforms.Compose([crop(args.scale, args.patch_size), augmentation()])
@@ -27,7 +28,13 @@ def train(args):
     generator = Generator()
     
     
-    if args.fine_tuning:        
+    if args.fine_tuning:
+        # if os.path.exists(args.generator_path):
+        #     with open(args.generator_path, 'rb') as f:
+        #         buffer = BytesIO(f.read())
+        #     generator.load_state_dict(torch.load(buffer))
+       # buffer = BytesIO(torch.load(args.generator_path))
+       # generator.load_state_dict(torch.load(buffer))        
         generator.load_state_dict(torch.load(args.generator_path))
         print("pre-trained model is loaded")
         print("path : %s"%(args.generator_path))
@@ -46,8 +53,8 @@ def train(args):
         for i, tr_data in enumerate(loader):
             gt = tr_data['GT'].to(device)
             lr = tr_data['LR'].to(device)
-            print(lr.shape)
-            print(gt.shape)
+            #print(lr.shape)
+            #print(gt.shape)
 
             # output, _ = generator(lr)
             output = generator(lr)
@@ -102,13 +109,13 @@ def train(args):
             # output, _ = generator(lr)
             output = generator(lr)
             # fake_prob = discriminator(output)
-            print(output.shape)
-            print(lr.shape)
+            #print(output.shape)
+            #print(lr.shape)
             fake_prob = discriminator(output,lr)
             # real_prob = discriminator(gt)
             real_prob = discriminator(gt,lr)
-            print("fake ", fake_prob)
-            print("real" , real_prob)
+            #print("fake ", fake_prob)
+            #print("real" , real_prob)
             d_loss_real = cross_ent(real_prob, real_label)
             d_loss_fake = cross_ent(fake_prob, fake_label)
             

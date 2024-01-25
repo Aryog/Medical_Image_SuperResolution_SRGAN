@@ -78,10 +78,10 @@ class Discriminator(nn.Module):
 
         x = self.flatten(x)
 
-        print(x.shape)
+        #print(x.shape)
 
         x = self.fc1(x)
         x = self.fc2(self.relu(x))
         # outputs the range of 0 to 1
-        print(x.shape)
+        #print(x.shape)
         return self.sigmoid(x)
