@@ -38,3 +38,6 @@ class vgg19(nn.Module):
 # Extract features from the high-resolution and generated images
 # -- pred_features = feature_extractor(pred_hr)
 # -- hr_features = feature_extractor(hr_img)
+    
+
+
