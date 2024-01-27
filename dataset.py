@@ -109,6 +109,7 @@ class augmentation(object):
         ver_flip = random.randrange(0,2)
         rot = random.randrange(0,2)
     
+        print(f"Horizontal Flip: {hor_flip}, Vertical Flip: {ver_flip}, Rotation: {rot}")
         if hor_flip:
             temp_LR = np.fliplr(LR_img)
             LR_img = temp_LR.copy()

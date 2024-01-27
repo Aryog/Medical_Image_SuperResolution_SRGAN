@@ -15,7 +15,7 @@ def test_single_image(generator_path, input_image_path, output_path):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load the generator model
-    generator = Generator()
+    generator = Generator()          #for ours
     # generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = 16)
     generator.load_state_dict(torch.load(generator_path))
     generator = generator.to(device)
@@ -29,13 +29,19 @@ def test_single_image(generator_path, input_image_path, output_path):
         output = generator(input_image)
         output = output[0].cpu().numpy()
         output = (output + 1.0) / 2.0
+        print(f'This is output shape before transpose: {output.shape}')
+        # Add this line to check the content of the output array
+        print(f'This is output content before transpose: {output}')
         output = output.transpose(1, 2, 0)
-        result = Image.fromarray((output * 255.0).astype(np.uint8))
+        # output = output.transpose(0, 2, 3, 1)
+        result = Image.fromarray((output * 255.0).astype(np.uint8)) # for ours
+        # result = Image.fromarray((output[0] * 255.0).astype(np.uint8))
         result.save(output_path)
 
 if __name__ == "__main__":
     # Specify the paths and parameters
-    generator_path = "./model/pre_trained_model_010.pt"
+    # generator_path = "./model/pre_trained_model_010.pt"
+    generator_path = "./model/MedSRGAN_gene_006.pt"
     input_image_path = "./check.jpeg"
     output_path = "./enhanced_output.jpeg"
 
