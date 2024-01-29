@@ -197,13 +197,11 @@ def test(args):
             y_output = rgb2ycbcr(output)[args.scale:-args.scale, args.scale:-args.scale, :1]
             y_gt = rgb2ycbcr(gt)[args.scale:-args.scale, args.scale:-args.scale, :1]
             
+            # Calculate SSIM
             psnr = peak_signal_noise_ratio(y_output / 255.0, y_gt / 255.0, data_range = 1.0)
             psnr_list.append(psnr)
             # Calculate SSIM
-            # Check number of channels
-            # Calculate SSIM
             win_size = min(y_output.shape[0], y_output.shape[1], 7)  # Choose a window size smaller than the image dimensions
-            win_size = max(win_size // 2 * 2 + 1, 3)  # Ensure win_size is an odd value and at least 3
             win_size = int(win_size)  # Ensure win_size is an integer
             data_range = 1.0  # Set data_range based on the normalization
             ssim = structural_similarity(y_output.squeeze() / 255.0, y_gt.squeeze() / 255.0, win_size=win_size, data_range=data_range)
