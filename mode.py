@@ -12,7 +12,7 @@ from vgg19 import vgg19
 import numpy as np
 from PIL import Image
 from skimage.color import rgb2ycbcr
-#from skimage.measure import compare_psnr
+from skimage.metrics import peak_signal_noise_ratio,structural_similarity
 
 
 def train(args):
@@ -165,14 +165,15 @@ def test(args):
     dataset = mydata(GT_path = args.GT_path, LR_path = args.LR_path, in_memory = False, transform = None)
     loader = DataLoader(dataset, batch_size = 1, shuffle = False, num_workers = args.num_workers)
     
-    generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = args.res_num)
+    # generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = args.res_num)
+    generator = Generator()
     generator.load_state_dict(torch.load(args.generator_path))
     generator = generator.to(device)
     generator.eval()
     
     f = open('./result.txt', 'w')
     psnr_list = []
-    
+    ssim_list = []
     with torch.no_grad():
         for i, te_data in enumerate(loader):
             gt = te_data['GT'].to(device)
@@ -181,8 +182,8 @@ def test(args):
             bs, c, h, w = lr.size()
             gt = gt[:, :, : h * args.scale, : w *args.scale]
 
-            output, _ = generator(lr)
-
+            # output, _ = generator(lr)
+            output = generator(lr)
             output = output[0].cpu().numpy()
             output = np.clip(output, -1.0, 1.0)
             gt = gt[0].cpu().numpy()
@@ -196,10 +197,20 @@ def test(args):
             y_output = rgb2ycbcr(output)[args.scale:-args.scale, args.scale:-args.scale, :1]
             y_gt = rgb2ycbcr(gt)[args.scale:-args.scale, args.scale:-args.scale, :1]
             
-            psnr = compare_psnr(y_output / 255.0, y_gt / 255.0, data_range = 1.0)
+            psnr = peak_signal_noise_ratio(y_output / 255.0, y_gt / 255.0, data_range = 1.0)
             psnr_list.append(psnr)
+            # Calculate SSIM
+            # Check number of channels
+            # Calculate SSIM
+            win_size = min(y_output.shape[0], y_output.shape[1], 7)  # Choose a window size smaller than the image dimensions
+            win_size = max(win_size // 2 * 2 + 1, 3)  # Ensure win_size is an odd value and at least 3
+            win_size = int(win_size)  # Ensure win_size is an integer
+            data_range = 1.0  # Set data_range based on the normalization
+            ssim = structural_similarity(y_output.squeeze() / 255.0, y_gt.squeeze() / 255.0, win_size=win_size, data_range=data_range)
+            ssim_list.append(ssim)
+            #----------------------
             f.write('psnr : %04f \n' % psnr)
-
+            f.write('ssim : %04f \n' % ssim)
             result = Image.fromarray((output * 255.0).astype(np.uint8))
             result.save('./result/res_%04d.png'%i)
 
@@ -212,8 +223,8 @@ def test_only(args):
     dataset = testOnly_data(LR_path = args.LR_path, in_memory = False, transform = None)
     loader = DataLoader(dataset, batch_size = 1, shuffle = False, num_workers = args.num_workers)
     
-    generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = args.res_num)
-    # generator = Generator()
+    # generator = Generator(img_feat = 3, n_feats = 64, kernel_size = 3, num_block = args.res_num)
+    generator = Generator()
     generator.load_state_dict(torch.load(args.generator_path))
     generator = generator.to(device)
     generator.eval()

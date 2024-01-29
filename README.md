@@ -41,4 +41,8 @@ To use the app, follow these steps:
     ```
     
     Make sure to input the path of the test image when prompted.
+5. You can check the __PSNR__ and __SSIM__ using the command
+    ```bash
+    python main.py --mode test --LR_path custom_dataset/train_LR --GT_path custom_dataset/train_HR --generator_path ./model/MedSRGAN_gene_0XX.pt
+    ```
 5. View the output result as **`enhanced_output.jpeg`** in your **root** directory.
